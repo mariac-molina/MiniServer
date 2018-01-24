@@ -60,17 +60,16 @@ class Connection implements Runnable {
 					}
 
 					if (ung.equals("User-Agent:")) {
-						System.out.println("AAAAAAAAAAAA" + ung);
-						String bla = st.nextToken();
-						String delims = "[#]+";
-						String []tokens = bla.split(delims);
-						for(int i = 0; i < tokens.length; i++) {
-							if (tokens[i].toLowerCase() == "safari") 
-								isSafari = true;
-								
-						}
+
+						isSafari = line.contains("Safari");
+						//System.out.println("here" + isSafari);
 					}
 				}
+			}
+			if (!isSafari) {
+				code = "400";
+			} else {
+				code = "200";
 			}
 		} catch (IOException e) {
 			System.err.println("I/O error " + e);
@@ -110,12 +109,6 @@ class Connection implements Runnable {
 			reponse = reponse + "\n</pre>\n</p>\n</body>\n</html>\n";
 
 			// L'en-tête de la réponse part sur le socket, direction le client !
-
-			if (isSafari) {
-				code = "200 OK";
-			} else {
-				code = "404 Not Found";
-			}
 
 			sendResponseHeader(out, reponse.length(), code);
 
