@@ -13,6 +13,8 @@ class Connection implements Runnable {
 	private boolean isSafari = false;
 	private int bodyLength;
 	private String code = "";
+	private String testHTML = "/Users/professionnal/Documents/eclipse_workspace/Mini_Server/test.html";
+	private boolean fileExists = false;
 
 	public Connection(Socket socket) {
 		this.socket = socket;
@@ -62,12 +64,12 @@ class Connection implements Runnable {
 					if (ung.equals("User-Agent:")) {
 
 						isSafari = line.contains("Safari");
-						//System.out.println("here" + isSafari);
+						// System.out.println("here" + isSafari);
 					}
 				}
 			}
 			if (!isSafari) {
-				code = "400";
+				code = "403";
 			} else {
 				code = "200";
 			}
@@ -91,20 +93,46 @@ class Connection implements Runnable {
 		}
 		return new String(line);
 	}
+	
+	public String getPageContent() throws IOException {
+		File f = new File(testHTML);
+		if (f.exists() && !f.isDirectory()) {
+			fileExists = true;
+			code = "200 OK";
+		}
+		
+		StringBuilder contentBuilder = new StringBuilder();
+		BufferedReader bf = new BufferedReader(new FileReader(testHTML));
+		String str;
+		while ((str = bf.readLine()) != null)
+			contentBuilder.append(str);
+
+		bf.close();
+		
+		String content = contentBuilder.toString();
+		
+		return content;
+	}
 
 	public void run() {
 		try {
 			System.out.println("connection reçue du client");
 			// out est le flux sur lequel on va écrire : un socket vers le client !
 			PrintStream out = new PrintStream(socket.getOutputStream());
-
+			
+			
 			// Préparation de la réponse
 			String reponse = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"fr\">\n<head>\n<title>Requete</title>\n</head>\n<body><p><pre>\n";
 			reponse = reponse + litHeaderDeLaRequete();
 			System.out.println("requête est un POST ? : " + requeteEstUnPost);
-
+			
 			if (requeteEstUnPost) {
-				reponse = reponse + '\n' + litBodyDeLaRequete();
+				if(fileExists) {
+					System.out.println(fileExists);
+					reponse = reponse + '\n' + getPageContent();
+				}
+				else
+					reponse = reponse + "<" ;
 			}
 			reponse = reponse + "\n</pre>\n</p>\n</body>\n</html>\n";
 
