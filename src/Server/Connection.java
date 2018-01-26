@@ -43,6 +43,17 @@ class Connection implements Runnable {
 			StringTokenizer st = new StringTokenizer(line);
 
 			requeteEstUnPost = st.nextToken().equals("POST");
+			
+			File f = new File(testHTML);
+			if (f.exists()) {
+				fileExists = true;
+				code = "200 OK";
+				System.out.println("File has been found");
+			}
+			else {
+				code = "404 Not found";
+				System.out.println("file not found");
+			}
 
 			System.out.println(line);
 
@@ -95,11 +106,15 @@ class Connection implements Runnable {
 	}
 	
 	public String getPageContent() throws IOException {
-		File f = new File(testHTML);
+	/*	File f = new File(testHTML);
 		if (f.exists() && !f.isDirectory()) {
 			fileExists = true;
 			code = "200 OK";
+			System.out.println("Fila has been found");
 		}
+		else {
+			System.out.println("file not found");
+		}*/
 		
 		StringBuilder contentBuilder = new StringBuilder();
 		BufferedReader bf = new BufferedReader(new FileReader(testHTML));
@@ -122,26 +137,33 @@ class Connection implements Runnable {
 			
 			
 			// Préparation de la réponse
-			String reponse = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"fr\">\n<head>\n<title>Requete</title>\n</head>\n<body><p><pre>\n";
-			reponse = reponse + litHeaderDeLaRequete();
+			String reponse = "";
+			String entete = "";
+			
+			entete = litHeaderDeLaRequete();
+			reponse = entete + getPageContent();
+		
 			System.out.println("requête est un POST ? : " + requeteEstUnPost);
 			
 			if (requeteEstUnPost) {
 				if(fileExists) {
 					System.out.println(fileExists);
-					reponse = reponse + '\n' + getPageContent();
+					reponse =  litHeaderDeLaRequete();
 				}
 				else
-					reponse = reponse + "<" ;
+					reponse =  "<" ;
 			}
-			reponse = reponse + "\n</pre>\n</p>\n</body>\n</html>\n";
+				
+			//reponse = reponse + "\n</pre>\n</p>\n</body>\n</html>\n";
 
 			// L'en-tête de la réponse part sur le socket, direction le client !
 
-			sendResponseHeader(out, reponse.length(), code);
+			sendResponseHeader(out, entete.length(), code);
 
 			// et le body !
 			out.print(reponse);
+			System.out.println(fileExists);
+			System.out.println("reponse = " + reponse);
 
 			socket.close();
 		} catch (IOException e) {
