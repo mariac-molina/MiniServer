@@ -79,7 +79,8 @@ class Connection implements Runnable {
 					}
 				}
 			}
-			if (!isSafari) {
+			// If browser is Chrome OK, anything else won't work
+			if (!isChrome) {
 				code = "403";
 			} else {
 				code = "200";
@@ -137,33 +138,38 @@ class Connection implements Runnable {
 			
 			
 			// Préparation de la réponse
-			String reponse = "";
-			String entete = "";
 			
-			entete = litHeaderDeLaRequete();
-			reponse = entete + getPageContent();
-		
-			System.out.println("requête est un POST ? : " + requeteEstUnPost);
+			String reponse = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"fr\">\n<head>\n<title>Requete</title>\n</head>\n<body><p><pre>\n ";
+			
+			reponse = reponse + litHeaderDeLaRequete() + getPageContent();
+			
+			//String error = reponse + getPageContent(errorHTML);
 			
 			if (requeteEstUnPost) {
-				if(fileExists) {
-					System.out.println(fileExists);
-					reponse =  litHeaderDeLaRequete();
-				}
-				else
-					reponse =  "<" ;
+				reponse = reponse + '\n' + litBodyDeLaRequete();
 			}
+			reponse = reponse + "\n</pre>\n</p>\n</body>\n</html>\n";
+			
+		
+
 				
 			//reponse = reponse + "\n</pre>\n</p>\n</body>\n</html>\n";
 
 			// L'en-tête de la réponse part sur le socket, direction le client !
 
-			sendResponseHeader(out, entete.length(), code);
+			sendResponseHeader(out, reponse.length(), code);
 
 			// et le body !
-			out.print(reponse);
-			System.out.println(fileExists);
-			System.out.println("reponse = " + reponse);
+			//website sent to favourite browser only
+			if (isChrome){
+				out.print(reponse);
+			}
+			//If not chrome, website is not sent out
+			else{
+				System.out.println("Website only works with our favourite browser : Chrome ");
+			}
+			//System.out.println(fileExists);
+			//System.out.println("reponse = " + reponse);
 
 			socket.close();
 		} catch (IOException e) {
